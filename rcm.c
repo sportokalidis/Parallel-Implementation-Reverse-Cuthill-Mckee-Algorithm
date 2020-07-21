@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "queue.h"
+#include <time.h>
 
 #define SIZE 10
+#define MODE 2
+#define SPARSITY 0.5
 
 void init_matrix(int* matrix);
 int* degreesCalculation(int* matrix);
@@ -60,21 +63,27 @@ int* CuthillMckee(int* matrix) {
       }
 
       sortByDegree(neighbors, degrees, neighborsCounter);
-
+      /*
       printf("neighbors: ");
       for (size_t i = 0; i < neighborsCounter; i++) {
         printf("%d, ", neighbors[i]);
       }
       printf("\n");
-
+      */
       for (size_t i = 0; i < neighborsCounter; i++) {
         queueAdd(Q, neighbors[i]);
       }
 
       R[Rsize++] = *currentIndex;
+      free(currentIndex);
     }
 
   }
+
+  queueDelete(Q);
+  free(notVisited);
+  free(degrees);
+
 
   return R;
 }
@@ -102,11 +111,11 @@ int main(int argc, char const *argv[]) {
   int *matrix = (int*) malloc(sizeof(int) * SIZE * SIZE);
 
   init_matrix(matrix);
-
+  /*
   printf("MATRIX:\n");
   for (size_t i = 0; i < SIZE; i++) {
     for (size_t j = 0; j < SIZE; j++) {
-      printf("%d", *(matrix+i*SIZE+j));
+      printf("%d ", *(matrix+i*SIZE+j));
     }
     printf("\n");
   }
@@ -118,7 +127,8 @@ int main(int argc, char const *argv[]) {
     printf("%d, ", degrees[i]);
   }
   printf("\n\n");
-
+  free(degrees);
+  */
 
   int* R = (int*) malloc(SIZE*sizeof(int));
   R = ReverseCuthillMckee(matrix);
@@ -126,6 +136,9 @@ int main(int argc, char const *argv[]) {
   for (size_t i = 0; i < SIZE; i++) {
     printf("%d, ", R[i]);
   }
+
+  free(matrix);
+  free(R);
 
   return 0;
 }
@@ -138,27 +151,52 @@ int main(int argc, char const *argv[]) {
 // ### FUNCTIONS ###
 
 void init_matrix(int* matrix) {
-  FILE* file = fopen("input.txt", "r");
-  int i=0, j=0;
-  int value;
-  char ch;
+  if(MODE == 1) {
+    FILE* file = fopen("input.txt", "r");
+    int i=0, j=0;
+    int value;
+    char ch;
 
-  while(1) {
-    ch = fgetc(file);
-    value = atoi(&ch);
-    if(ch == '0' || ch == '1') {
-      *(matrix+i*SIZE+j) = value;
-      j++;
-      if(j >= SIZE){
-        i++;
-        j=0;
+
+    while(1) {
+      ch = fgetc(file);
+      value = atoi(&ch);
+      if(ch == '0' || ch == '1') {
+        *(matrix+i*SIZE+j) = value;
+        j++;
+        if(j >= SIZE){
+          i++;
+          j=0;
+        }
+      }
+
+      if(ch == EOF) {
+        break;
+      }
+
+    }
+  }
+
+  if(MODE == 2) {
+    srand(time(NULL));
+    int randNum=0;
+
+    while(1){
+      double sum=0;
+      for (size_t i = 0; i < SIZE; i++) {
+        for (size_t j = 0; j < SIZE; j++) {
+          randNum = rand() % 100;
+          randNum = randNum>=50 ? 0 : 1; // if randNum >= 70: randNum = 0    else: randNum = 1
+          sum += randNum;
+          *(matrix+i*SIZE+j) = randNum;
+        }
+      }
+      double sparsity = (((double)(SIZE*SIZE)) - sum) / (double)(SIZE*SIZE);
+      printf(" >> sparsity: %lf\n", sparsity);
+      if(sparsity > SPARSITY){
+        break;
       }
     }
-
-    if(ch == EOF) {
-      break;
-    }
-
   }
 }
 
