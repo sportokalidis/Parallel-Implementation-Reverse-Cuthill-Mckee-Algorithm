@@ -2,16 +2,18 @@
 #include <stdlib.h>
 #include "queue.h"
 #include <time.h>
+#include <sys/time.h>
 
-#define SIZE 10
+#define SIZE 20
 #define MODE 2
-#define SPARSITY 0.5
+#define SPARSITY 0.6
 
 void init_matrix(int* matrix);
 int* degreesCalculation(int* matrix);
 int findNotVisited(int* notVisited);
 void sortByDegree(int* neighbors, int* degrees, int size);
 void swap(int* addr1, int* addr2);
+void output_write(int* matrix, char* file_path);
 
 
 int* CuthillMckee(int* matrix) {
@@ -41,7 +43,7 @@ int* CuthillMckee(int* matrix) {
     int minDegreeIndex = 0;
 
     for (size_t i = 0; i < SIZE; i++) {
-      if(degrees[i] < degrees[minDegreeIndex] && notVisited[i] == 1) {
+      if(degrees[i] <= degrees[minDegreeIndex] && notVisited[i] == 1) {
         minDegreeIndex = i;
       }
     }
@@ -100,6 +102,9 @@ int* ReverseCuthillMckee(int* matrix) {
 
   for (size_t i = 0; i <= n; i++) {
     swap(&rcm[SIZE - 1 - i], &rcm[i]);
+    for (size_t j = 0; j < SIZE; j++) {
+      swap(matrix+i*SIZE+j, matrix+(SIZE-1-i)*SIZE+j);
+    }
   }
 
   return rcm;
@@ -120,22 +125,35 @@ int main(int argc, char const *argv[]) {
     printf("\n");
   }
   printf("\n");
-
+  */
   int* degrees = degreesCalculation(matrix);
   printf("DEGREES:\n");
-  for (size_t i = 0; i < SIZE; i++) {
-    printf("%d, ", degrees[i]);
+  for (int i = 0; i < SIZE; i++) {
+    printf("%d: %d, ", i, degrees[i]);
   }
   printf("\n\n");
   free(degrees);
-  */
+
+
+  struct timeval start, end;
 
   int* R = (int*) malloc(SIZE*sizeof(int));
+
+
+  gettimeofday(&start, NULL);
   R = ReverseCuthillMckee(matrix);
+  gettimeofday(&end, NULL);
+
+
 
   for (size_t i = 0; i < SIZE; i++) {
     printf("%d, ", R[i]);
   }
+
+  double time = ((double)((end.tv_sec*1e6 + end.tv_usec) - (start.tv_sec*1e6 + start.tv_usec)))*1e-6;
+  printf(" >>> ExecutingTime: %lf usec\n", time);
+
+  output_write(matrix, "output/output.txt");
 
   free(matrix);
   free(R);
@@ -152,7 +170,10 @@ int main(int argc, char const *argv[]) {
 
 void init_matrix(int* matrix) {
   if(MODE == 1) {
-    FILE* file = fopen("input.txt", "r");
+    FILE* file = fopen("input/input.txt", "r");
+    if(file == NULL)
+      exit(0);
+
     int i=0, j=0;
     int value;
     char ch;
@@ -175,6 +196,7 @@ void init_matrix(int* matrix) {
       }
 
     }
+    fclose(file);
   }
 
   if(MODE == 2) {
@@ -184,11 +206,13 @@ void init_matrix(int* matrix) {
     while(1){
       double sum=0;
       for (size_t i = 0; i < SIZE; i++) {
-        for (size_t j = 0; j < SIZE; j++) {
+        for (size_t j = 0; j <= i; j++) {
           randNum = rand() % 100;
-          randNum = randNum>=50 ? 0 : 1; // if randNum >= 70: randNum = 0    else: randNum = 1
+          randNum = randNum<=70 ? 0 : 1; // if randNum >= 70: randNum = 0    else: randNum = 1
+          randNum = i==j ? 0 : randNum;
           sum += randNum;
           *(matrix+i*SIZE+j) = randNum;
+          *(matrix+j*SIZE+i) = randNum;
         }
       }
       double sparsity = (((double)(SIZE*SIZE)) - sum) / (double)(SIZE*SIZE);
@@ -197,6 +221,18 @@ void init_matrix(int* matrix) {
         break;
       }
     }
+    // write the input array in test_input file for testing
+    FILE* file = fopen("input/test_input.txt", "w");
+    if(file == NULL)
+      exit(0);
+
+    for (size_t i = 0; i < SIZE; i++) {
+      for (size_t j = 0; j < SIZE; j++) {
+        fprintf(file, "%d, ", *(matrix+i*SIZE+j));
+      }
+      fprintf(file, "\n");
+    }
+    fclose(file);
   }
 }
 
@@ -252,4 +288,20 @@ void swap(int* addr1, int* addr2) {
   int temp = *addr1;
   *addr1 = *addr2;
   *addr2 = temp;
+}
+
+
+
+void output_write(int* matrix, char* file_path) {
+  FILE* file = fopen(file_path, "w");
+  if(file == NULL)
+    exit(0);
+
+  for (size_t i = 0; i < SIZE; i++) {
+    for (size_t j = 0; j < SIZE; j++) {
+      fprintf(file, "%d, ", *(matrix+i*SIZE+j));
+    }
+    fprintf(file, "\n");
+  }
+  fclose(file);
 }
