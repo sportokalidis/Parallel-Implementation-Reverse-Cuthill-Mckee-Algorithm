@@ -3,9 +3,10 @@
 #include "queue.h"
 #include <time.h>
 #include <sys/time.h>
+#include <omp.h>
 
 #define SIZE 20
-#define MODE 2
+#define MODE 1
 #define SPARSITY 0.6
 
 void init_matrix(int* matrix);
@@ -57,21 +58,29 @@ int* CuthillMckee(int* matrix) {
       int* neighbors = (int*) malloc(degrees[*currentIndex] * sizeof(int));
       int neighborsCounter=0;
 
-      for (size_t i = 0; i < SIZE; i++) {
-        if(i != *currentIndex && *(matrix+(*currentIndex)*SIZE+i)==1 && notVisited[i]==1) {
-          neighbors[neighborsCounter++] = i;
-          notVisited[i] = 0;
-        }
+      int i;
+      #pragma omp parallel private(i)
+      {
+        #pragma omp for schedule(dynamic, 7500)
+          for ( i = 0; i < SIZE; i++) {
+            if(i != *currentIndex && *(matrix+(*currentIndex)*SIZE+i)==1 && notVisited[i]==1) {
+              #pragma omp critical
+              {
+                neighbors[neighborsCounter++] = i;
+                notVisited[i] = 0;
+              }
+            }
+          }
       }
 
       sortByDegree(neighbors, degrees, neighborsCounter);
-
-
-      // printf("neighbors(cur: %d): ",*currentIndex);
-      // for (size_t i = 0; i < neighborsCounter; i++) {
-      //   printf("%d, ", neighbors[i]);
-      // }
-      // printf("\n");
+      /*
+      printf("neighbors: ");
+      for (size_t i = 0; i < neighborsCounter; i++) {
+        printf("%d, ", neighbors[i]);
+      }
+      printf("\n");
+      */
 
       for (size_t i = 0; i < neighborsCounter; i++) {
         queueAdd(Q, neighbors[i]);
@@ -127,7 +136,7 @@ int main(int argc, char const *argv[]) {
   //   printf("\n");
   // }
   // printf("\n");
-  //
+
   int* degrees = degreesCalculation(matrix);
   printf("DEGREES:\n");
   for (int i = 0; i < SIZE; i++) {
@@ -173,7 +182,7 @@ int main(int argc, char const *argv[]) {
 
 void init_matrix(int* matrix) {
   if(MODE == 1) {
-    FILE* file = fopen("input/input.txt", "r");
+    FILE* file = fopen("input/test_input.txt", "r");
     if(file == NULL)
       exit(0);
 
@@ -241,16 +250,20 @@ void init_matrix(int* matrix) {
 
 int* degreesCalculation(int* matrix) {
   int* degree_array = (int*) malloc(SIZE * sizeof(int));
-  int sum=0;
+  int i;
 
-  for (size_t i = 0; i < SIZE; i++) {
-    for (size_t j = 0; j < SIZE; j++) {
-      sum += *(matrix+ i*SIZE+j);
-    }
-    degree_array[i] = sum;
-    sum = 0;
+  #pragma omp parallel private(i)
+  {
+    int sum=0;
+    #pragma omp for schedule(dynamic)
+      for ( i = 0; i < SIZE; i++) {
+        for (size_t j = 0; j < SIZE; j++) {
+          sum += *(matrix+ i*SIZE+j);
+        }
+        degree_array[i] = sum;
+        sum = 0;
+      }
   }
-
   return degree_array;
 }
 
