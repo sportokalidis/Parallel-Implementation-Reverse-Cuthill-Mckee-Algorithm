@@ -5,8 +5,8 @@
 #include <sys/time.h>
 #include <omp.h>
 
-#define SIZE 20
-#define MODE 1
+#define SIZE 30000
+#define MODE 2
 #define SPARSITY 0.6
 #define MAX_THREADS 4
 
@@ -16,10 +16,9 @@ int findNotVisited(int* notVisited);
 void sortByDegree(int* neighbors, int* degrees, int size);
 void swap(int* addr1, int* addr2);
 void output_write(int* matrix, char* file_path);
-void reordering(int** neighbors, queue* Q, int* neighborsCounter, int* R, int* Rsize, int* currentIndex, int* degrees, int size);
-void swap_ptr(int* ptr1, int* ptr2);
+void reordering(int** neighbors, queue* Q, int* neighborsCounter, int* R, int* Rsize, int* currentIndex, int* degrees, int size, int* queue_size);
 
-int start_pos=0;
+
 
 int* CuthillMckee(int* matrix) {
   int* degrees = degreesCalculation(matrix);
@@ -36,16 +35,6 @@ int* CuthillMckee(int* matrix) {
   }
 
 
-  /*
-  int* notVisited = (int*) malloc( 2*SIZE * sizeof(int));
-  for (size_t i = 0; i < SIZE; i++) {
-    for (size_t j = 0; j < 2; j++) {
-      *(notVisited+i*2+j) = j==0 ? i
-                                 : *(degrees+i);
-    }
-  }
-  */
-
   while(Rsize < SIZE) {
     int minDegreeIndex = 0;
 
@@ -60,6 +49,7 @@ int* CuthillMckee(int* matrix) {
 
     int queue_size = 1;
     int threads_using=queue_size;
+    int test_queue_size=1;
     while(!(Q->empty)) {
       int *neighbors[threads_using];
       int neighborsCounter[threads_using];
@@ -89,6 +79,7 @@ int* CuthillMckee(int* matrix) {
             // notVisited[i] = 0;
           }
         }
+        
         // queue_size += neighborsCounter[tid];
         sortByDegree(neighbors[tid], degrees, neighborsCounter[tid]);
 
@@ -100,11 +91,12 @@ int* CuthillMckee(int* matrix) {
 
 
       }
+      test_queue_size  = test_queue_size - threads_using;
       // printf("queue_size : %d,   Q->empty : %d\n", queue_size, Q->empty);
       // if(threads_using > 1) {
         // printf(">> thread > 1, %d\n", threads_using);
 
-      reordering(neighbors, Q, neighborsCounter, R, &Rsize ,currentIndex, notVisited, threads_using);
+      reordering(neighbors, Q, neighborsCounter, R, &Rsize ,currentIndex, notVisited, threads_using, &test_queue_size);
       // }
       // else if(threads_using == 1){
       //   for (size_t i = 0; i < neighborsCounter[0]; i++) {
@@ -117,6 +109,10 @@ int* CuthillMckee(int* matrix) {
       // }
       queue_size = Q->tail - Q->head;
       threads_using = queue_size >= MAX_THREADS ? MAX_THREADS : queue_size;
+      // printf("queue_size(Tail - Head): %d\n", queue_size);
+      // printf("Threads_using: %d\n", threads_using);
+      // printf("test_queue_size: %d\n", test_queue_size);
+      // printf("---------------------------------------------------------------------------------" );
       // printf("\n\n");
     }
 
@@ -211,7 +207,7 @@ int main(int argc, char const *argv[]) {
 
 void init_matrix(int* matrix) {
   if(MODE == 1) {
-    FILE* file = fopen("input/test_input.txt", "r");
+    FILE* file = fopen("input/input.txt", "r");
     if(file == NULL)
       exit(0);
 
@@ -281,7 +277,7 @@ int* degreesCalculation(int* matrix) {
   int* degree_array = (int*) malloc(SIZE * sizeof(int));
   int i;
 
-  #pragma omp parallel private(i)
+  #pragma omp parallel num_threads(MAX_THREADS) private(i)
   {
     int sum=0;
     #pragma omp for schedule(dynamic)
@@ -335,12 +331,6 @@ void swap(int* addr1, int* addr2) {
   *addr2 = temp;
 }
 
-void swap_ptr(int* ptr1, int* ptr2) {
-  int* temp = ptr1;
-  ptr1 = ptr2;
-  ptr2 = temp;
-}
-
 void output_write(int* matrix, char* file_path) {
   FILE* file = fopen(file_path, "w");
   if(file == NULL)
@@ -356,22 +346,8 @@ void output_write(int* matrix, char* file_path) {
 }
 
 
-void reordering(int** neighbors, queue* Q, int* neighborsCounter, int* R, int* Rsize ,int* currentIndex, int* notVisited, int size) {
+void reordering(int** neighbors, queue* Q, int* neighborsCounter, int* R, int* Rsize ,int* currentIndex, int* notVisited, int size, int* queue_size) {
 
-
-  // for (size_t i = 0; i < *Rsize; i++) {
-  //   for (size_t j = 0; j < size; j++) {
-  //     // printf("\nR[i] %d == %d currentIndex[j]\n", R[i], currentIndex[j]);
-  //     if(R[i] == currentIndex[j]) {
-  //       for (size_t z = 0; z < neighborsCounter[j]; z++) {
-  //         queueAdd(Q, neighbors[j][z]);
-  //         // printf(" >%d ", neighbors[j][z]);
-  //       }
-  //     }
-  //
-  //
-  //   }
-  // }
   // printf("Add to Q: ");
   for (size_t i = 0; i < size; i++) {
     for (size_t j = 0; j < size; j++) {
@@ -382,6 +358,7 @@ void reordering(int** neighbors, queue* Q, int* neighborsCounter, int* R, int* R
             // printf(" -> notVisited: %d, \n", notVisited[neighbors[j][z]]);
             queueAdd(Q, neighbors[j][z]);
             notVisited[neighbors[j][z]] = 0;
+            *queue_size = *queue_size + 1;
             // printf(" %d ", neighbors[j][z]);
           }
         }
