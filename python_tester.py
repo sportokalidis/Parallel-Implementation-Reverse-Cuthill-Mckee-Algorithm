@@ -7,6 +7,7 @@ graph = [[]]
 counter=0;
 
 file = list(file.read())
+
 # print(file)
 for i in file:
     if(i == '0' or i == '1'):
@@ -28,3 +29,8 @@ graph = csr_matrix(graph)
 result = reverse_cuthill_mckee(graph)
 
 print(result)
+
+file = open("output/py_output.txt", "w")
+
+for i in result:
+    file.write(str(i)+", ")
