@@ -6,7 +6,7 @@
 #include "functions.h"
 #include <omp.h>
 
-#define SIZE 1000
+#define SIZE 500
 #define MODE 1
 #define SPARSITY 0.9
 #define MAX_THREADS 4
@@ -196,7 +196,7 @@ int main(int argc, char const *argv[]) {
   double time = ((double)((end.tv_sec*1e6 + end.tv_usec) - (start.tv_sec*1e6 + start.tv_usec)))*1e-6;
   printf(" >>> ExecutingTime: %lf sec\n", time);
 
-  // output_write(matrix, SIZE, SIZE, "output/output.txt");
+
   write_vector(R, SIZE, "output/v2_output.txt");
 
   free(matrix);

@@ -6,9 +6,9 @@
 #include "functions.h"
 #include <omp.h>
 
-#define SIZE 1000
+#define SIZE 500
 #define MODE 1
-#define SPARSITY 0.9
+#define SPARSITY 0.8
 #define THREADS_NUM 4
 
 
@@ -100,8 +100,14 @@ int* ReverseCuthillMckee(int* matrix) {
 
   n = n / 2;
 
-  for (size_t i = 0; i <= n; i++) {
-    swap(&rcm[SIZE - 1 - i], &rcm[i]);
+  int i;
+  int CHUNKSIZE = SIZE / THREADS_NUM;
+  #pragma omp parallel num_threads(THREADS_NUM) private(i) shared(rcm)
+  {
+    #pragma omp for schedule(dynamic, CHUNKSIZE)
+    for (i = 0; i <= n; i++) {
+      swap(&rcm[SIZE - 1 - i], &rcm[i]);
+    }
   }
 
   return rcm;
@@ -151,7 +157,7 @@ int main(int argc, char const *argv[]) {
   double time = ((double)((end.tv_sec*1e6 + end.tv_usec) - (start.tv_sec*1e6 + start.tv_usec)))*1e-6;
   printf(" >>> ExecutingTime: %lf sec\n", time);
 
-  // output_write(matrix, SIZE, SIZE, "output/output.txt");
+
   write_vector(R, SIZE, "output/v1_output.txt");
 
   free(matrix);

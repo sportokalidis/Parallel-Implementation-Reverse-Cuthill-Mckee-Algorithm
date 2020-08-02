@@ -63,14 +63,14 @@ void queueAdd (queue *q, int in)
 
 void queueDel (queue *q, int *out)
 {
-  *out = q->buf[q->head];
+    *out = q->buf[q->head];
 
-  q->head++;
-  if (q->head == QUEUESIZE)
-    q->head = 0;
-  if (q->head == q->tail)
-    q->empty = 1;
-  q->full = 0;
+    q->head++;
+    if (q->head == QUEUESIZE)
+      q->head = 0;
+    if (q->head == q->tail)
+      q->empty = 1;
+    q->full = 0;
 
   return;
 }

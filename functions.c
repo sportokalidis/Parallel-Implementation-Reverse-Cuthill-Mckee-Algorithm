@@ -13,13 +13,13 @@ void init_matrix(int* matrix, int size, int mode, double sparsity_limit) {
 
     int i=0, j=0;
     int value;
-    char ch;
+    char* ch = (char*) malloc(sizeof(char));
 
 
     while(1) {
-      ch = fgetc(file);
-      value = atoi(&ch);
-      if(ch == '0' || ch == '1') {
+      *ch = fgetc(file);
+      if(*ch == '0' || *ch == '1') {
+        value = atoi(ch);
         *(matrix+i*size+j) = value;
         j++;
         if(j >= size){
@@ -28,7 +28,7 @@ void init_matrix(int* matrix, int size, int mode, double sparsity_limit) {
         }
       }
 
-      if(ch == EOF) {
+      if(*ch == EOF) {
         break;
       }
 
@@ -38,26 +38,43 @@ void init_matrix(int* matrix, int size, int mode, double sparsity_limit) {
 
   if(mode == 2) {
     srand(time(NULL));
-    int randNum=0;
+    // int randNum=0;
+    //
+    // while(1){
+    //   double sum=0;
+    //   for (size_t i = 0; i < size; i++) {
+    //     for (size_t j = 0; j <= i; j++) {
+    //       randNum = rand() % 100;
+    //       randNum = randNum<= sparsity_limit*100 ? 0 : 1; // if randNum <= 70: randNum = 0    else: randNum = 1
+    //       randNum = i==j ? 0 : randNum;
+    //       sum = randNum==1 ? sum+2 : sum;
+    //       *(matrix+i*size+j) = randNum;
+    //       *(matrix+j*size+i) = randNum;
+    //     }
+    //   }
+    //   double sparsity = (((double)(size*size)) - sum) / (double)(size*size);
+    //   printf(" >> sparsity: %lf\n", sparsity);
+    //   if(sparsity > sparsity_limit){
+    //     break;
+    //   }
+    // }
 
-    while(1){
-      double sum=0;
-      for (size_t i = 0; i < size; i++) {
-        for (size_t j = 0; j <= i; j++) {
-          randNum = rand() % 100;
-          randNum = randNum<=70 ? 0 : 1; // if randNum >= 70: randNum = 0    else: randNum = 1
-          randNum = i==j ? 0 : randNum;
-          sum += randNum;
-          *(matrix+i*size+j) = randNum;
-          *(matrix+j*size+i) = randNum;
-        }
-      }
-      double sparsity = (((double)(size*size)) - sum) / (double)(size*size);
-      printf(" >> sparsity: %lf\n", sparsity);
-      if(sparsity > sparsity_limit){
-        break;
-      }
+    int non_zeros = (size*size) - (size*size*sparsity_limit);
+    int sum = 0, randX=0, randY=0;
+
+    for (size_t i = 0; i < non_zeros; i+=2) {
+      do {
+        randX = rand() % size;
+        randY = rand() % size;
+      } while(randX == randY);
+      *(matrix+randX*size+randY) = 1;
+      *(matrix+randY*size+randX) = 1;
+      sum += 2;
     }
+    double sparsity = 1.0 - ((double)sum)/((double)(size*size));
+    printf(" >> Sparsity: %lf\n", sparsity);
+    printf(" >> Nonzeros: %d\n", non_zeros);
+
     // write the input array in test_input file for testing
     FILE* file = fopen("input/test_input.txt", "w");
     if(file == NULL)

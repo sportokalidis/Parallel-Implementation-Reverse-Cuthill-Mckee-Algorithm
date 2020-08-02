@@ -5,9 +5,9 @@
 #include <sys/time.h>
 #include "functions.h"
 
-#define SIZE 1000
+#define SIZE 500
 #define MODE 2
-#define SPARSITY 0.9
+#define SPARSITY 0.99
 
 int* CuthillMckee(int* matrix) {
   int* degrees = degreesCalculation(matrix, SIZE);
@@ -34,7 +34,7 @@ int* CuthillMckee(int* matrix) {
 
     queueAdd(Q, minDegreeIndex);
     notVisited[minDegreeIndex] = 0;
-    printf("minDegIndex: %d\n", minDegreeIndex);
+    // printf("minDegIndex: %d\n", minDegreeIndex);
 
     while(!(Q->empty)) {
       int* currentIndex = (int*) malloc(sizeof(int));
@@ -52,11 +52,11 @@ int* CuthillMckee(int* matrix) {
       sortByDegree(neighbors, degrees, neighborsCounter);
 
 
-      printf("sorted neighbors of %d: ", *currentIndex);
-      for (size_t i = 0; i < neighborsCounter; i++) {
-        printf("%d, ", neighbors[i]);
-      }
-      printf("\n");
+      // printf("sorted neighbors of %d: ", *currentIndex);
+      // for (size_t i = 0; i < neighborsCounter; i++) {
+      //   printf("%d, ", neighbors[i]);
+      // }
+      // printf("\n");
 
       for (size_t i = 0; i < neighborsCounter; i++) {
         queueAdd(Q, neighbors[i]);
@@ -112,28 +112,29 @@ int* reorder(int* matrix, int* R, int size) {
   return new_matrix;
 }
 
+
 int main(int argc, char const *argv[]) {
 
   int *matrix = (int*) calloc(SIZE * SIZE, sizeof(int));
 
   init_matrix(matrix, SIZE, MODE, SPARSITY);
 
-  printf("MATRIX:\n");
-  for (size_t i = 0; i < SIZE; i++) {
-    for (size_t j = 0; j < SIZE; j++) {
-      printf("%d ", *(matrix+i*SIZE+j));
-    }
-    printf("\n");
-  }
-  printf("\n");
+  // printf("MATRIX:\n");
+  // for (size_t i = 0; i < SIZE; i++) {
+  //   for (size_t j = 0; j < SIZE; j++) {
+  //     printf("%d ", *(matrix+i*SIZE+j));
+  //   }
+  //   printf("\n");
+  // }
+  // printf("\n");
 
-  int* degrees = degreesCalculation(matrix, SIZE);
-  printf("DEGREES:\n");
-  for (int i = 0; i < SIZE; i++) {
-    printf("%d: %d, ", i, degrees[i]);
-  }
-  printf("\n\n");
-  free(degrees);
+  // int* degrees = degreesCalculation(matrix, SIZE);
+  // printf("DEGREES:\n");
+  // for (int i = 0; i < SIZE; i++) {
+  //   printf("%d: %d, ", i, degrees[i]);
+  // }
+  // printf("\n\n");
+  // free(degrees);
 
 
   struct timeval start, end;
@@ -147,18 +148,17 @@ int main(int argc, char const *argv[]) {
 
 
 
-  for (size_t i = 0; i < SIZE; i++) {
-    printf("%d, ", R[i]);
-  }
+  // for (size_t i = 0; i < SIZE; i++) {
+  //   printf("%d, ", R[i]);
+  // }
 
 
   double time = ((double)((end.tv_sec*1e6 + end.tv_usec) - (start.tv_sec*1e6 + start.tv_usec)))*1e-6;
   printf(" >>> ExecutingTime: %lf sec\n", time);
 
 
-
   int* new_matrix = reorder(matrix, R, SIZE);
-  output_write(new_matrix, SIZE, SIZE, "output/output.txt");
+  output_write(new_matrix, SIZE, SIZE, "output/output_matrix.txt");
   write_vector(R, SIZE, "output/v0_output.txt");
 
   free(matrix);
