@@ -28,7 +28,7 @@ graph = csr_matrix(graph)
 
 result = reverse_cuthill_mckee(graph)
 
-print(result)
+# print(result)
 
 file = open("output/py_output.txt", "w")
 

@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-size = 10
+size = 500
 
 file = open("input/test_input.txt", "r")
 x = []
@@ -25,12 +25,15 @@ for i in file:
     if(i == '\n'):
         continue
 
-plt.scatter(y, x)
-plt.show()
+plt.figure(1)
+plt.scatter(y, x, marker='.', linewidths=0.01)
+plt.plot([0, size-1], [size-1, 0], color='red')
 
 
+plt.figure(2)
 
-file = open("output/output.txt", "r")
+
+file = open("output/output_matrix.txt", "r")
 x = []
 y = []
 Xcounter=size-1
@@ -53,5 +56,6 @@ for i in file:
     if(i == '\n'):
         continue
 
-plt.scatter(x, y)
+plt.scatter(x, y, marker=".",linewidths=0.01)
+plt.plot([0, size-1], [size-1, 0], color='red')
 plt.show()

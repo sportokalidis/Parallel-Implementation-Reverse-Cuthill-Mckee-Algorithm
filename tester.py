@@ -12,15 +12,15 @@ file2 = list(file2)
 
 
 print("---------------------------------------------------------")
-if(filepy == file0):
+if(file0 == file0):
     print("-> Version 0 is ", colored('Correct', 'green'))
 else:
     print("-> Version 0 is ", colored('not Correct', 'red'))
-if(filepy == file1):
+if(file0 == file1):
     print("-> Version 1 is ", colored('Correct', 'green'))
 else:
     print("-> Version 1 is ", colored('not Correct', 'red'))
-if(filepy == file2):
+if(file0 == file2):
     print("-> Version 2 is ", colored('Correct', 'green'))
 else:
     print("-> Version 2 is ", colored('not Correct', 'red'))
