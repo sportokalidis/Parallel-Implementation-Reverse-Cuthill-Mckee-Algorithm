@@ -125,6 +125,62 @@ int* degreesCalculationParallel(int* matrix, int size, int threads_num) {
 }
 
 
+int findMinIdx(int* degrees, int* notVisited, int size) {
+  int minDegreeIndex = 0;  // The pos of min degree node in matrix
+  int minDegree = size+10; // A node can not have degree > SIZE
+
+  // find the min degree
+  for (size_t i = 0; i < size; i++) {
+    if(degrees[i] < minDegree && notVisited[i] == 1) {
+      minDegreeIndex = i;
+      minDegree = degrees[i];
+    }
+  }
+
+  return minDegreeIndex;
+}
+
+
+int findMinIdxParallel(int* degrees, int* notVisited, int size, int threads_num) {
+  int degArray[threads_num];
+  int idxArray[threads_num];
+  int tid;
+
+  omp_lock_t writelock;
+  omp_init_lock(&writelock);
+
+  // find the min degree
+  int i;
+  int CHUNKSIZE = size / threads_num;
+  #pragma omp parallel num_threads(threads_num) private(i, tid)
+  {
+    tid = omp_get_thread_num();
+    int minDegreeIndex = -1;  // The pos of min degree node in matrix
+    int minDegree = size+10; // A node can not have degree > SIZE
+    #pragma omp for schedule(static, CHUNKSIZE)
+      for (i = 0; i < size; i++) {
+        if(degrees[i] < minDegree && notVisited[i] == 1) {
+          minDegreeIndex = i;
+          minDegree = degrees[i];
+        }
+      }
+      degArray[tid] = minDegree;
+      idxArray[tid] = minDegreeIndex;
+  }
+
+  int globalMinIdx = idxArray[0];
+  int globalMinDeg = degArray[0];
+
+  for (size_t i = 1; i < threads_num; i++) {
+    if(degArray[i] < globalMinDeg) {
+      globalMinDeg = degArray[i];
+      globalMinIdx = idxArray[i];
+    }
+  }
+
+  return globalMinIdx;
+}
+
 int findNotVisited(int* notVisited, int size) {
   for (size_t i = 0; i < size; i++) {
     if(*(notVisited+i) == 1)
@@ -198,7 +254,7 @@ void write_vector(int* vector, int size, char* file_path) {
 
 
 
-void reordering(int** neighbors, queue* Q, int* neighborsCounter, int* R, int* Rsize ,int* currentIndex, int* notVisited, int size, int* queue_size) {
+void AddtoQueue(int** neighbors, queue* Q, int* neighborsCounter, int* R, int* Rsize ,int* currentIndex, int* notVisited, int size, int* queue_size) {
 
   // printf("Add to Q: ");
   for (size_t i = 0; i < size; i++) {
@@ -217,11 +273,23 @@ void reordering(int** neighbors, queue* Q, int* neighborsCounter, int* R, int* R
       }
     }
   }
+}
 
 
-  // printf("  R: ");
-  // for (size_t i = 0; i < *Rsize; i++) {
-  //   printf("%d, ", R[i]);
-  // }
+int* reorder(int* matrix, int* R, int size) {
+  int* new_matrix =(int*) calloc(size*size, sizeof(int));
 
+  for (int i = 0; i < size; i++) {
+    for (int j = 0; j < size; j++) {
+      if(*(matrix+size*R[i]+j) == 1) {
+        for (int k = 0; k < size; k++) {
+          if(R[k] == j) {
+            *(new_matrix+size*i+k) = 1;
+          }
+        }
+      }
+    }
+  }
+
+  return new_matrix;
 }

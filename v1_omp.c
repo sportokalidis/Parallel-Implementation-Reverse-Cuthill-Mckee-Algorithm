@@ -5,11 +5,12 @@
 #include <sys/time.h>
 #include "functions.h"
 #include <omp.h>
+#include "rcm.h"
 
-#define SIZE 500
-#define MODE 1
-#define SPARSITY 0.8
-#define THREADS_NUM 4
+#define SIZE 500       // number of rows and cols of sparse array
+#define MODE 1         // MODE = 1: Read a sparse array from file, MODE = 2: Create a sparse array, with a specific sparsity
+#define SPARSITY 0.99   // the percentage of zeros in sparse array
+#define THREADS_NUM 4  // Num of threads
 
 
 int* CuthillMckee(int* matrix) {
@@ -22,6 +23,7 @@ int* CuthillMckee(int* matrix) {
   omp_lock_t writelock;
   omp_init_lock(&writelock);
 
+
   for (size_t i = 0; i < SIZE; i++) {
     *(notVisited+i) = 1;
   }
@@ -29,14 +31,17 @@ int* CuthillMckee(int* matrix) {
 
   while(Rsize != SIZE) {
     int minDegreeIndex = -1;
-    int minDegree = SIZE+10;
+    // int minDegree = SIZE+10;
+    //
+    // for (size_t i = 0; i < SIZE; i++) {
+    //   if(degrees[i] < minDegree && notVisited[i] == 1) {
+    //     minDegreeIndex = i;
+    //     minDegree = degrees[i];
+    //   }
+    // }
+    minDegreeIndex = findMinIdxParallel(degrees, notVisited, SIZE, THREADS_NUM);
+    // minDegreeIndex = findMinIdx(degrees, notVisited, SIZE);
 
-    for (size_t i = 0; i < SIZE; i++) {
-      if(degrees[i] < minDegree && notVisited[i] == 1) {
-        minDegreeIndex = i;
-        minDegree = degrees[i];
-      }
-    }
 
     queueAdd(Q, minDegreeIndex);
     notVisited[minDegreeIndex] = 0;
@@ -101,8 +106,8 @@ int* ReverseCuthillMckee(int* matrix) {
   n = n / 2;
 
   int i;
-  int CHUNKSIZE = SIZE / THREADS_NUM;
-  #pragma omp parallel num_threads(THREADS_NUM) private(i) shared(rcm)
+  int CHUNKSIZE = n / THREADS_NUM;
+  #pragma omp parallel num_threads(THREADS_NUM) private(i)
   {
     #pragma omp for schedule(dynamic, CHUNKSIZE)
     for (i = 0; i <= n; i++) {

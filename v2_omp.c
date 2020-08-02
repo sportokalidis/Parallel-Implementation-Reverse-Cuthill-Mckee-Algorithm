@@ -5,11 +5,12 @@
 #include <sys/time.h>
 #include "functions.h"
 #include <omp.h>
+#include "rcm.h"
 
-#define SIZE 500
-#define MODE 1
-#define SPARSITY 0.9
-#define MAX_THREADS 4
+#define SIZE 500       // number of rows and cols of sparse array
+#define MODE 1         // MODE = 1: Read a sparse array from file, MODE = 2: Create a sparse array, with a specific sparsity
+#define SPARSITY 0.99  // the percentage of zeros in sparse array
+#define MAX_THREADS 4  // The max num of threads
 
 
 int* CuthillMckee(int* matrix) {
@@ -29,14 +30,16 @@ int* CuthillMckee(int* matrix) {
 
   while(Rsize < SIZE) {
     int minDegreeIndex = 0;
-    int minDegree = SIZE+10;
-
-    for (size_t i = 0; i < SIZE; i++) {
-      if(degrees[i] < minDegree && notVisited[i] == 1) {
-        minDegreeIndex = i;
-        minDegree = degrees[i];
-      }
-    }
+    // int minDegree = SIZE+10;
+    //
+    // for (size_t i = 0; i < SIZE; i++) {
+    //   if(degrees[i] < minDegree && notVisited[i] == 1) {
+    //     minDegreeIndex = i;
+    //     minDegree = degrees[i];
+    //   }
+    // }
+    minDegreeIndex = findMinIdxParallel(degrees, notVisited, SIZE, MAX_THREADS);
+    // minDegreeIndex = findMinIdx(degrees, notVisited, SIZE);
 
     queueAdd(Q, minDegreeIndex);
     notVisited[minDegreeIndex] = 0;
@@ -105,7 +108,7 @@ int* CuthillMckee(int* matrix) {
       // if(threads_using > 1) {
         // printf(">> thread > 1, %d\n", threads_using);
 
-      reordering(neighbors, Q, neighborsCounter, R, &Rsize ,currentIndex, notVisited, threads_using, &queue_size);
+      AddtoQueue(neighbors, Q, neighborsCounter, R, &Rsize ,currentIndex, notVisited, threads_using, &queue_size);
       // }
       // else if(threads_using == 1){
       //   for (size_t i = 0; i < neighborsCounter[0]; i++) {
@@ -145,9 +148,16 @@ int* ReverseCuthillMckee(int* matrix) {
 
   n = n / 2;
 
-  for (size_t i = 0; i <= n; i++) {
-    swap(&rcm[SIZE - 1 - i], &rcm[i]);
+  int i;
+  int CHUNKSIZE = n / MAX_THREADS;
+  #pragma omp parallel num_threads(MAX_THREADS) private(i)
+  {
+    #pragma omp for schedule(dynamic, CHUNKSIZE)
+    for (i = 0; i <= n; i++) {
+      swap(&rcm[SIZE - 1 - i], &rcm[i]);
+    }
   }
+
 
   return rcm;
 }

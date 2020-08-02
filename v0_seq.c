@@ -4,27 +4,30 @@
 #include <time.h>
 #include <sys/time.h>
 #include "functions.h"
+#include "rcm.h"
 
-#define SIZE 500
-#define MODE 2
-#define SPARSITY 0.99
+#define SIZE 500       // number of rows and cols of sparse array
+#define MODE 2         // MODE = 1: Read a sparse array from file, MODE = 2: Create a sparse array, with a specific sparsity
+#define SPARSITY 0.99  // the percentage of zeros in sparse array
+
 
 int* CuthillMckee(int* matrix) {
-  int* degrees = degreesCalculation(matrix, SIZE);
+  int* degrees = degreesCalculation(matrix, SIZE);  // degrees points to a vector with the degree of each row
 
-  queue* Q = queueInit();
-  int* R = (int*) malloc(SIZE * sizeof(int));
-  int Rsize=0;
-  int* notVisited = (int*) malloc(SIZE*sizeof(int));
+  queue* Q = queueInit();                            // Init the queue
+  int* R = (int*) malloc(SIZE * sizeof(int));        // Allocate memory for the permutations array
+  int Rsize=0;                                       // The num of nodes in R
+  int* notVisited = (int*) malloc(SIZE*sizeof(int)); // Allocate memory and init notVisited array
 
   for (size_t i = 0; i < SIZE; i++) {
     *(notVisited+i) = 1;
   }
 
   while(Rsize != SIZE) {
-    int minDegreeIndex = 0;
-    int minDegree = SIZE+10;
+    int minDegreeIndex = 0;  // The pos of min degree node in matrix
+    int minDegree = SIZE+10; // A node can not have degree > SIZE
 
+    // find the min degree
     for (size_t i = 0; i < SIZE; i++) {
       if(degrees[i] < minDegree && notVisited[i] == 1) {
         minDegreeIndex = i;
@@ -32,24 +35,25 @@ int* CuthillMckee(int* matrix) {
       }
     }
 
-    queueAdd(Q, minDegreeIndex);
-    notVisited[minDegreeIndex] = 0;
+    queueAdd(Q, minDegreeIndex);      // add in Q
+    notVisited[minDegreeIndex] = 0;   // This node become visited
     // printf("minDegIndex: %d\n", minDegreeIndex);
 
     while(!(Q->empty)) {
       int* currentIndex = (int*) malloc(sizeof(int));
       queueDel(Q, currentIndex);
-      int* neighbors = (int*) malloc(degrees[*currentIndex] * sizeof(int));
-      int neighborsCounter=0;
+      int* neighbors = (int*) malloc(degrees[*currentIndex] * sizeof(int)); // array of neighbors
+      int neighborsCounter=0;  // the num of neighbors
 
+      // find all not visited neighbors
       for (size_t i = 0; i < SIZE; i++) {
         if(i != *currentIndex && *(matrix+(*currentIndex)*SIZE+i)==1 && notVisited[i]==1) {
-          neighbors[neighborsCounter++] = i;
-          notVisited[i] = 0;
+          neighbors[neighborsCounter++] = i; // add the neighbor in the array
+          notVisited[i] = 0; // and the node become visited
         }
       }
 
-      sortByDegree(neighbors, degrees, neighborsCounter);
+      sortByDegree(neighbors, degrees, neighborsCounter); // sort the neighbors by degree
 
 
       // printf("sorted neighbors of %d: ", *currentIndex);
@@ -58,10 +62,12 @@ int* CuthillMckee(int* matrix) {
       // }
       // printf("\n");
 
+      // add the sorted neighbor in Q
       for (size_t i = 0; i < neighborsCounter; i++) {
         queueAdd(Q, neighbors[i]);
       }
 
+      // add the current node in permutation array R
       R[Rsize++] = *currentIndex;
       free(currentIndex);
       free(neighbors);
@@ -94,29 +100,13 @@ int* ReverseCuthillMckee(int* matrix) {
 }
 
 
-int* reorder(int* matrix, int* R, int size) {
-  int* new_matrix =(int*) calloc(size*size, sizeof(int));
 
-  for (int i = 0; i < size; i++) {
-    for (int j = 0; j < size; j++) {
-      if(*(matrix+size*R[i]+j) == 1) {
-        for (int k = 0; k < size; k++) {
-          if(R[k] == j) {
-            *(new_matrix+size*i+k) = 1;
-          }
-        }
-      }
-    }
-  }
-
-  return new_matrix;
-}
 
 
 int main(int argc, char const *argv[]) {
 
+  // Init the sparse array
   int *matrix = (int*) calloc(SIZE * SIZE, sizeof(int));
-
   init_matrix(matrix, SIZE, MODE, SPARSITY);
 
   // printf("MATRIX:\n");
@@ -141,7 +131,7 @@ int main(int argc, char const *argv[]) {
 
   int* R = (int*) malloc(SIZE*sizeof(int));
 
-
+  // Run the algorithm and messure the execution time
   gettimeofday(&start, NULL);
   R = ReverseCuthillMckee(matrix);
   gettimeofday(&end, NULL);
@@ -152,11 +142,12 @@ int main(int argc, char const *argv[]) {
   //   printf("%d, ", R[i]);
   // }
 
-
+  // Calculate the time
   double time = ((double)((end.tv_sec*1e6 + end.tv_usec) - (start.tv_sec*1e6 + start.tv_usec)))*1e-6;
   printf(" >>> ExecutingTime: %lf sec\n", time);
 
 
+  // Calculate the new array, after permutations
   int* new_matrix = reorder(matrix, R, SIZE);
   output_write(new_matrix, SIZE, SIZE, "output/output_matrix.txt");
   write_vector(R, SIZE, "output/v0_output.txt");
