@@ -1,5 +1,58 @@
 # Parallel-Implementation-Reverse-Cuthill-Mckee-Algorithm
 
+## Running
+Parallel-Implementation-Reverse-Cuthill-McKee-Algorithm/<br>
+------- inc/<br>
+------- lib/<br>
+------- src/<br>
+------- input/<br>
+------- output/<br>
+------- tester/<br>
+------- Makefile<br>
+<br>
+
+***Build the code:***
+```shell
+$ make all
+
+```
+<br>
+
+***Run the code:***
+```shell
+$ ./src/v0
+$ ./src/v1
+$ ./src/v2
+$ ./src/v3
+
+```
+***or***
+
+```shell
+$ make run
+
+```
+<br>
+
+***Clean executables and libs***
+```shell
+$ make clean
+
+```
+<br>
+
+***Visualization*** <br>
+Run the tester/visualization.py file. 
+```shell
+$ python tester/visualization.py
+
+```
+Need to define the suitable size of the array in the file. 
+
+
+<br><br>
+---
+
 ## Results 
 
 ### Size = 5000, sparsity = 0.6
@@ -33,7 +86,7 @@
 |**verison 3**|    -    |   0.041 |   0.036 |
 
 
-<img src=img/part1/5000-0.6.png width=310 height=300/><img src=img/part1/5000-0.8.png width=310 height=300/><img src=img/part1/5000-0.9.png width=310 height=300/>
+<img src=img/part1/5000-0.6.png width=300 height=300/><img src=img/part1/5000-0.8.png width=300 height=300/><img src=img/part1/5000-0.9.png width=300 height=300/>
 
 <br><br>
 
@@ -105,3 +158,7 @@
 
 <img src=img/part3/20000-0.6.png width=310 height=300/><img src=img/part3/20000-0.8.png width=310 height=300/><img src=img/part3/20000-0.9.png width=310 height=300/>
 
+<br><br>
+
+---
+## Visualization
