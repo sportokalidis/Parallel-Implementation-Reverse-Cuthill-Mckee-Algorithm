@@ -162,3 +162,11 @@ Need to define the suitable size of the array in the file.
 
 ---
 ## Visualization
+
+<img src=img/vis/vis1.png width=310 height=300/><img src=img/vis/vis2.png width=310 height=300/> 
+<br>
+<img src=img/vis/vis3.png width=310 height=300/><img src=img/vis/vis4.png width=310 height=300/> 
+<br>
+<img src=img/vis/vis5.png width=310 height=300/><img src=img/vis/vis6.png width=310 height=300/> 
+<br>
+<img src=img/vis/vis7.png width=310 height=300/><img src=img/vis/vis8.png width=310 height=300/> 
