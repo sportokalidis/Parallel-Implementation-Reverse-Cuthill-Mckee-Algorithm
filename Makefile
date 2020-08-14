@@ -39,8 +39,8 @@ run:
 	$(SDIR)/v0
 	$(SDIR)/v1
 	$(SDIR)/v2
-	python3 $(TDIR)/python_tester.py
-	python3 $(TDIR)/tester.py
+	# python3 $(TDIR)/python_tester.py
+	# python3 $(TDIR)/tester.py
 
 clean:
 	rm -f $(EXEC) $(LIBS)
