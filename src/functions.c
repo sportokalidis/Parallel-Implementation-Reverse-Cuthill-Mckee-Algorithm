@@ -92,6 +92,10 @@ void init_matrix(int* matrix, int size, int mode, double sparsity_limit) {
 
 int* degreesCalculation(int* matrix, int size) {
   int* degree_array = (int*) malloc(size * sizeof(int));
+  if(degree_array == NULL) {
+    printf("ERROR: malloc fail");
+    exit(1);
+  }
   int sum=0;
 
   for (size_t i = 0; i < size; i++) {

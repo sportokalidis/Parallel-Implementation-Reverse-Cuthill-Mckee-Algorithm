@@ -20,7 +20,7 @@ for i in file:
 
 graph.remove([])
 # print(graph)
-print(len(graph))
+# print(len(graph))
 
 graph = csr_matrix(graph)
 

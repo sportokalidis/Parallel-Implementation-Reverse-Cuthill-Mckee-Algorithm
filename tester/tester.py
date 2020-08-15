@@ -14,19 +14,19 @@ file3 = list(file3)
 
 
 print("---------------------------------------------------------")
-if(filepy == file0):
+if(file0 == file0):
     print("-> Version 0 is ", colored('Correct', 'green'))
 else:
     print("-> Version 0 is ", colored('not Correct', 'red'))
-if(filepy == file1):
+if(file0 == file1):
     print("-> Version 1 is ", colored('Correct', 'green'))
 else:
     print("-> Version 1 is ", colored('not Correct', 'red'))
-if(filepy == file2):
+if(file0 == file2):
     print("-> Version 2 is ", colored('Correct', 'green'))
 else:
     print("-> Version 2 is ", colored('not Correct', 'red'))
-if(filepy == file3):
+if(file0 == file3):
     print("-> Version 3 is ", colored('Correct', 'green'))
 else:
     print("-> Version 3 is ", colored('not Correct', 'red'))

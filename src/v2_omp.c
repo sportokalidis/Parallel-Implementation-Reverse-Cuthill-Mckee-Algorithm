@@ -7,10 +7,10 @@
 #include <omp.h>
 #include "rcm.h"
 
-#define SIZE 50           // number of rows and cols of sparse array
-#define MODE 1            // MODE = 1: Read a sparse array from file, MODE = 2: Create a sparse array, with a specific sparsity
-#define SPARSITY 0.999    // the percentage of zeros in sparse array
-#define MAX_THREADS 4     // The max num of threads
+#define SIZE 500           // number of rows and cols of sparse array
+#define MODE 1             // MODE = 1: Read a sparse array from file, MODE = 2: Create a sparse array, with a specific sparsity
+#define SPARSITY 0.6       // the percentage of zeros in sparse array
+#define MAX_THREADS 4      // The max num of threads
 
 
 int* CuthillMckee(int* matrix) {
@@ -18,8 +18,17 @@ int* CuthillMckee(int* matrix) {
 
   queue* Q = queueInit();
   int* R = (int*) malloc(SIZE * sizeof(int));
+  if(R == NULL) {
+    printf("ERROR: malloc fail");
+    exit(1);
+  }
   int Rsize=0;
   int* notVisited = (int*) malloc(SIZE*sizeof(int));
+  if(notVisited == NULL) {
+    printf("ERROR: malloc fail");
+    exit(1);
+  }
+
   // init an omp lock
   omp_lock_t writelock;
   omp_init_lock(&writelock);
@@ -32,14 +41,7 @@ int* CuthillMckee(int* matrix) {
 
   while(Rsize < SIZE) {
     int minDegreeIndex = 0;
-    // int minDegree = SIZE+10;
-    //
-    // for (size_t i = 0; i < SIZE; i++) {
-    //   if(degrees[i] < minDegree && notVisited[i] == 1) {
-    //     minDegreeIndex = i;
-    //     minDegree = degrees[i];
-    //   }
-    // }
+
     minDegreeIndex = findMinIdxParallel(degrees, notVisited, SIZE, MAX_THREADS);  // find the min degree in parallel
     // minDegreeIndex = findMinIdx(degrees, notVisited, SIZE);
 
@@ -47,7 +49,6 @@ int* CuthillMckee(int* matrix) {
     notVisited[minDegreeIndex] = 0;  // This node become visited
 
     int queue_size = 1;
-    // int test_queue_size=1;
     int threads_using=queue_size;
 
     while(!(Q->empty)) {
@@ -55,21 +56,16 @@ int* CuthillMckee(int* matrix) {
       int neighborsCounter[threads_using];   // neighborsCounter[i] : the number of neighbors of i-st thread
       int currentIndex[threads_using];       // currentIndex[i] : the index that dequeue by i-st thread
       int tid;                               // the id of every thread ( >=0 && <= threads_using-1)
-      // int id=0;
-      // int flag=0;
 
-      // printf(">> threads_using: %d\n", threads_using);
-      // printf(">> Q->head: %ld, Q->tail: %ld\n", Q->head, Q->tail);
       #pragma omp parallel num_threads(threads_using) private(tid) shared(neighbors, neighborsCounter, currentIndex, notVisited, degrees, Q, queue_size, R)
       {
         tid = omp_get_thread_num();
-        //currentIndex[tid] = (int*) malloc(sizeof(int));
+
         omp_set_lock(&writelock);
           queueDel(Q, &currentIndex[tid]);
           queue_size--;
           R[Rsize] = currentIndex[tid];
           Rsize = Rsize + 1;
-          // int atomic_id = id++;
         omp_unset_lock(&writelock);
 
         neighbors[tid] = (int*) malloc(degrees[currentIndex[tid]] * sizeof(int));
@@ -79,56 +75,15 @@ int* CuthillMckee(int* matrix) {
           if(i != currentIndex[tid] && *(matrix+(currentIndex[tid])*SIZE+i)==1 && notVisited[i]==1) {
             neighbors[tid][neighborsCounter[tid]] = i;
             neighborsCounter[tid]++;
-            // notVisited[i] = 0;
           }
         }
 
-        // queue_size += neighborsCounter[tid];
-        // sort the neighbors by degree
         sortByDegree(neighbors[tid], degrees, neighborsCounter[tid]);
-
-        // for (size_t i = 0; i < neighborsCounter[tid]; i++) {
-        //   printf("tid:%d, %d    ",tid, neighbors[tid][i]);
-        // }
-        // printf("\n");
-
-        // while(1) {
-        //   if(atomic_id == flag) {
-        //     for (size_t i = 0; i < neighborsCounter[tid]; i++) {
-        //       if(notVisited[neighbors[tid][i]] == 1) {
-        //         queueAdd(Q, neighbors[tid][i]);
-        //         notVisited[neighbors[tid][i]] = 0;
-        //       }
-        //     }
-        //     flag++;
-        //     break;
-        //   }
-        // }
-
       }
-      // test_queue_size  = test_queue_size - threads_using;
-      // printf("queue_size : %d,   Q->empty : %d\n", queue_size, Q->empty);
-      // if(threads_using > 1) {
-        // printf(">> thread > 1, %d\n", threads_using);
 
       AddtoQueue(neighbors, Q, neighborsCounter, R, &Rsize ,currentIndex, notVisited, threads_using, &queue_size);
-      // }
-      // else if(threads_using == 1){
-      //   for (size_t i = 0; i < neighborsCounter[0]; i++) {
-      //     queueAdd(Q, neighbors[0][i]);
-      //   }
-      //
-      //   // R[Rsize++] = currentIndex[0];
-      //   //free(currentIndex);
-      //   //free(neighbors);
-      // }
-      // queue_size = Q->tail - Q->head;
+
       threads_using = queue_size >= MAX_THREADS ? MAX_THREADS : queue_size;
-      // printf("queue_size(Tail - Head): %d\n", queue_size);
-      // printf("Threads_using: %d\n", threads_using);
-      // printf("test_queue_size: %d\n", test_queue_size);
-      // printf("---------------------------------------------------------------------------------" );
-      // printf("\n\n");
     }
 
   }

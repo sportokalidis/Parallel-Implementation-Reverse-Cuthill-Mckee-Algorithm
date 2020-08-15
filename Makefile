@@ -7,9 +7,9 @@ TDIR = ./tester
 INCLUDES = -I$(IDIR)
 LIBRARIES = -L$(LDIR)
 CLEAN = clean
-EXEC = $(SDIR)/v0 $(SDIR)/v1 $(SDIR)/v2
-LIBS = $(LDIR)/v0_seq.a $(LDIR)/v1_omp.a $(LDIR)/v2_omp.a
-MAIN = v0_seq v1_omp v2_omp
+EXEC = $(SDIR)/v0 $(SDIR)/v1 $(SDIR)/v2 $(SDIR)/v3
+LIBS = $(LDIR)/v0_seq.a $(LDIR)/v1_omp.a $(LDIR)/v2_omp.a $(LDIR)/v3_omp.a
+MAIN = v0_seq v1_omp v2_omp v3_omp
 
 
 all: $(CLEAN) $(EXEC)
@@ -22,6 +22,9 @@ $(SDIR)/v1: $(SDIR)/v1_omp.c $(LDIR)/v1_omp.a
 	$(CC) $(CFLAGS) $(INCLUDES) $(LIBRARIES) -o $@ $^
 
 $(SDIR)/v2: $(SDIR)/v2_omp.c $(LDIR)/v2_omp.a
+	$(CC) $(CFLAGS) $(INCLUDES) $(LIBRARIES) -o $@ $^
+
+$(SDIR)/v3: $(SDIR)/v3_omp.c $(LDIR)/v3_omp.a
 	$(CC) $(CFLAGS) $(INCLUDES) $(LIBRARIES) -o $@ $^
 
 
@@ -39,8 +42,9 @@ run:
 	$(SDIR)/v0
 	$(SDIR)/v1
 	$(SDIR)/v2
-	# python3 $(TDIR)/python_tester.py
-	# python3 $(TDIR)/tester.py
+	$(SDIR)/v3
+	python3 $(TDIR)/python_tester.py
+	python3 $(TDIR)/tester.py
 
 clean:
 	rm -f $(EXEC) $(LIBS)

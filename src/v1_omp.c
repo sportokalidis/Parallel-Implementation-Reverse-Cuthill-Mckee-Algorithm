@@ -7,10 +7,10 @@
 #include <omp.h>
 #include "rcm.h"
 
-#define SIZE 50         // number of rows and cols of sparse array
-#define MODE 1          // MODE = 1: Read a sparse array from file, MODE = 2: Create a sparse array, with a specific sparsity
-#define SPARSITY 0.999  // the percentage of zeros in sparse array
-#define THREADS_NUM 4   // Num of threads
+#define SIZE 500         // number of rows and cols of sparse array
+#define MODE 1           // MODE = 1: Read a sparse array from file, MODE = 2: Create a sparse array, with a specific sparsity
+#define SPARSITY 0.6     // the percentage of zeros in sparse array
+#define THREADS_NUM 4    // Num of threads
 
 
 int* CuthillMckee(int* matrix) {
@@ -18,8 +18,16 @@ int* CuthillMckee(int* matrix) {
 
   queue* Q = queueInit();                              // Init the queue
   int* R = (int*) malloc(SIZE * sizeof(int));          // Allocate memory for the permutations array
+  if(R == NULL) {
+    printf("ERROR: malloc fail");
+    exit(1);
+  }
   int Rsize=0;                                         // The num of nodes in R
   int* notVisited = (int*) malloc(SIZE*sizeof(int));   // Allocate memory and init notVisited array
+  if(notVisited == NULL) {
+    printf("ERROR: malloc fail");
+    exit(1);
+  }
   // init an omp lock
   omp_lock_t writelock;
   omp_init_lock(&writelock);
@@ -32,18 +40,9 @@ int* CuthillMckee(int* matrix) {
 
   while(Rsize != SIZE) {
     int minDegreeIndex = -1;
-    // int minDegree = SIZE+10;
-    //
-    // for (size_t i = 0; i < SIZE; i++) {
-    //   if(degrees[i] < minDegree && notVisited[i] == 1) {
-    //     minDegreeIndex = i;
-    //     minDegree = degrees[i];
-    //   }
-    // }
 
     minDegreeIndex = findMinIdxParallel(degrees, notVisited, SIZE, THREADS_NUM); // find the min degree in parallel
     // minDegreeIndex = findMinIdx(degrees, notVisited, SIZE);
-
 
     queueAdd(Q, minDegreeIndex);     // add in Q
     notVisited[minDegreeIndex] = 0;  // This node become visited
@@ -73,12 +72,6 @@ int* CuthillMckee(int* matrix) {
 
       // sort the neighbors by degree
       sortByDegree(neighbors, degrees, neighborsCounter);
-
-      // printf("sorted neighbors of %d: ", *currentIndex);
-      // for (size_t i = 0; i < neighborsCounter; i++) {
-      //   printf("%d, ", neighbors[i]);
-      // }
-      // printf("\n");
 
       // add the sorted neighbor in Q
       for (size_t i = 0; i < neighborsCounter; i++) {
@@ -129,7 +122,10 @@ int* ReverseCuthillMckee(int* matrix) {
 int main(int argc, char const *argv[]) {
 
   int *matrix = (int*) calloc(SIZE * SIZE, sizeof(int));
-
+  if(matrix == NULL) {
+    printf("ERROR: malloc fail");
+    exit(1);
+  }
   init_matrix(matrix, SIZE, MODE, SPARSITY);
 
   // printf("MATRIX:\n");
@@ -153,7 +149,10 @@ int main(int argc, char const *argv[]) {
   struct timeval start, end;
 
   int* R = (int*) malloc(SIZE*sizeof(int));
-
+  if(R == NULL) {
+    printf("ERROR: malloc fail");
+    exit(1);
+  }
 
   gettimeofday(&start, NULL);
   R = ReverseCuthillMckee(matrix);

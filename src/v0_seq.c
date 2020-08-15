@@ -6,9 +6,9 @@
 #include "functions.h"
 #include "rcm.h"
 
-#define SIZE 50         // number of rows and cols of sparse array
-#define MODE 2          // MODE = 1: Read a sparse array from file, MODE = 2: Create a sparse array, with a specific sparsity
-#define SPARSITY 0.6    // the percentage of zeros in sparse array
+#define SIZE 500         // number of rows and cols of sparse array
+#define MODE 2           // MODE = 1: Read a sparse array from file, MODE = 2: Create a sparse array, with a specific sparsity
+#define SPARSITY 0.6     // the percentage of zeros in sparse array
 
 
 int* CuthillMckee(int* matrix) {
@@ -16,8 +16,17 @@ int* CuthillMckee(int* matrix) {
 
   queue* Q = queueInit();                            // Init the queue
   int* R = (int*) malloc(SIZE * sizeof(int));        // Allocate memory for the permutations array
+  if(R == NULL) {
+    printf("ERROR: malloc fail");
+    exit(1);
+  }
   int Rsize=0;                                       // The num of nodes in R
+
   int* notVisited = (int*) malloc(SIZE*sizeof(int)); // Allocate memory and init notVisited array
+  if(notVisited == NULL) {
+    printf("ERROR: malloc fail");
+    exit(1);
+  }
 
   // init notVisited array
   for (size_t i = 0; i < SIZE; i++) {
@@ -38,12 +47,19 @@ int* CuthillMckee(int* matrix) {
 
     queueAdd(Q, minDegreeIndex);      // add in Q
     notVisited[minDegreeIndex] = 0;   // This node become visited
-    // printf("minDegIndex: %d\n", minDegreeIndex);
 
     while(!(Q->empty)) {
       int* currentIndex = (int*) malloc(sizeof(int));
+      if(currentIndex == NULL) {
+        printf("ERROR: malloc fail");
+        exit(1);
+      }
       queueDel(Q, currentIndex);
       int* neighbors = (int*) malloc(degrees[*currentIndex] * sizeof(int)); // array of neighbors
+      if(neighbors == NULL) {
+        printf("ERROR: malloc fail");
+        exit(1);
+      }
       int neighborsCounter=0;  // the num of neighbors
 
       // find all not visited neighbors
@@ -56,13 +72,6 @@ int* CuthillMckee(int* matrix) {
 
       // sort the neighbors by degree
       sortByDegree(neighbors, degrees, neighborsCounter); // sort the neighbors by degree
-
-
-      // printf("sorted neighbors of %d: ", *currentIndex);
-      // for (size_t i = 0; i < neighborsCounter; i++) {
-      //   printf("%d, ", neighbors[i]);
-      // }
-      // printf("\n");
 
       // add the sorted neighbor in Q
       for (size_t i = 0; i < neighborsCounter; i++) {
@@ -110,6 +119,10 @@ int main(int argc, char const *argv[]) {
 
   // Init the sparse array
   int *matrix = (int*) calloc(SIZE * SIZE, sizeof(int));
+  if(matrix == NULL) {
+    printf("ERROR: malloc fail");
+    exit(1);
+  }
   init_matrix(matrix, SIZE, MODE, SPARSITY);
 
   // printf("MATRIX:\n");
@@ -133,7 +146,10 @@ int main(int argc, char const *argv[]) {
   struct timeval start, end;
 
   int* R = (int*) malloc(SIZE*sizeof(int));
-
+  if(R == NULL) {
+    printf("ERROR: malloc fail");
+    exit(1);
+  }
   // Run the algorithm and messure the execution time
   gettimeofday(&start, NULL);
   R = ReverseCuthillMckee(matrix);
