@@ -1,5 +1,17 @@
 # Parallel-Implementation-Reverse-Cuthill-Mckee-Algorithm
 
+## Description
+This GitHub project focuses on parallelizing the Reverse Cuthill-McKee algorithm for efficient graph reordering.
+
+<br>
+***Version 0 (Sequential):*** This initial version provides a sequential implementation of the Reverse Cuthill-McKee algorithm.
+
+***Version 1 (Parallel Node Neighbors):*** Version 1 introduces parallelism by concurrently finding the neighbor nodes of each vertex in the graph.
+
+***Version 2 (Multi-threaded Processing):*** In Version 2, we take advantage of multi-threading to process multiple nodes simultaneously, further optimizing the algorithm's execution speed.
+
+***Version 3 (Hybrid Parallelization):*** Version 3 combines the strengths of Versions 1 and 2. It aims to reduce the number of idle threads by efficiently managing the queue of nodes to be processed, making the algorithm highly parallelized and responsive to varying workloads.
+
 ## Running
 Parallel-Implementation-Reverse-Cuthill-McKee-Algorithm/<br>
 ------- inc/<br>
