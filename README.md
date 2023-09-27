@@ -1,7 +1,7 @@
 # Parallel-Implementation-Reverse-Cuthill-Mckee-Algorithm
 
 ## Description
-This GitHub project focuses on parallelizing the Reverse Cuthill-McKee algorithm for efficient graph reordering.
+This project focuses on parallelizing the Reverse Cuthill-McKee algorithm for efficient graph reordering.
 
 <br>
 
